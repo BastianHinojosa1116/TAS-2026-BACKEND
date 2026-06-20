@@ -11,6 +11,8 @@ import cl.dondevamos.backend.repository.UsuarioMunicipioRepository;
 import cl.dondevamos.backend.repository.RolRepository;
 import cl.dondevamos.backend.repository.MunicipioRepository;
 import org.springframework.stereotype.Service;
+
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -39,6 +41,7 @@ public class UsuarioMunicipioServiceImpl implements UsuarioMunicipioService {
         UsuarioMunicipio entity = mapper.toEntity(usuario);
         entity.setRol(rol);
         entity.setMunicipio(municipio);
+        entity.setFechaCreacion(LocalDateTime.now());
         UsuarioMunicipio saved = repository.save(entity);
         return mapper.toResponseDTO(saved);
     }
