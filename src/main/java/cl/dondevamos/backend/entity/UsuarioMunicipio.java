@@ -41,4 +41,7 @@ public class UsuarioMunicipio {
     @ManyToOne
     @JoinColumn(name = "id_municipio", nullable = false)
     private Municipio municipio;
+
+    @Column(name = "firebase_uid")
+    private String firebaseUid;
 }

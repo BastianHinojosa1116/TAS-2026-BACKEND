@@ -11,6 +11,9 @@ import cl.dondevamos.backend.repository.UsuarioMunicipioRepository;
 import cl.dondevamos.backend.repository.RolRepository;
 import cl.dondevamos.backend.repository.MunicipioRepository;
 import org.springframework.stereotype.Service;
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.UserRecord.CreateRequest;
+import com.google.firebase.auth.UserRecord;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -31,20 +34,61 @@ public class UsuarioMunicipioServiceImpl implements UsuarioMunicipioService {
         this.municipioRepository = municipioRepository;
     }
 
-    @Override
-    public UsuarioMunicipioResponseDTO crear(UsuarioMunicipioRequestDTO usuario) {
-        Rol rol = rolRepository.findById(usuario.getIdRol())
-                .orElseThrow(() -> new ResourceNotFoundException("Rol no encontrado con id: " + usuario.getIdRol()));
-        Municipio municipio = municipioRepository.findById(usuario.getIdMunicipio())
-                .orElseThrow(() -> new ResourceNotFoundException("Municipio no encontrado con id: " + usuario.getIdMunicipio()));
-        
-        UsuarioMunicipio entity = mapper.toEntity(usuario);
+   @Override
+public UsuarioMunicipioResponseDTO crear(UsuarioMunicipioRequestDTO usuario) {
+
+    Rol rol = rolRepository.findById(usuario.getIdRol())
+            .orElseThrow(() ->
+                    new ResourceNotFoundException(
+                            "Rol no encontrado con id: "
+                                    + usuario.getIdRol()));
+
+    Municipio municipio =
+            municipioRepository.findById(
+                            usuario.getIdMunicipio())
+                    .orElseThrow(() ->
+                            new ResourceNotFoundException(
+                                    "Municipio no encontrado con id: "
+                                            + usuario.getIdMunicipio()));
+
+    try {
+
+        CreateRequest request =
+                new CreateRequest()
+                        .setEmail(usuario.getCorreo())
+                        .setPassword("Temporal123*");
+
+        UserRecord firebaseUser =
+                FirebaseAuth.getInstance()
+                        .createUser(request);
+
+        String uid =
+                firebaseUser.getUid();
+
+        UsuarioMunicipio entity =
+                mapper.toEntity(usuario);
+
         entity.setRol(rol);
         entity.setMunicipio(municipio);
         entity.setFechaCreacion(LocalDateTime.now());
-        UsuarioMunicipio saved = repository.save(entity);
+
+        entity.setFirebaseUid(uid);
+
+        UsuarioMunicipio saved =
+                repository.save(entity);
+
         return mapper.toResponseDTO(saved);
+
+    } catch (Exception e) {
+
+        throw new RuntimeException(
+                "Error creando usuario en Firebase",
+                e
+        );
+
     }
+
+}
 
     @Override
     public UsuarioMunicipioResponseDTO obtenerPorId(Integer id) {
